@@ -1,8 +1,16 @@
 import { PIXIHooks } from './pixi-hooks';
-import { Panel, RenderPanel } from './stats-panel';
+import { RenderPanel } from './stats-panel';
+import { StatStorage } from './stat-storage';
 import { Renderer } from './model';
 import { StatsJSAdapter } from './stats-adapter';
 import { DOM_ELEMENT_ID } from './stats-constants';
+
+export type PanelConfig = {
+  name: string;
+  fg: string;
+  bg: string;
+  statStorage: StatStorage;
+};
 
 export class Stats {
   mode = -1;
@@ -15,27 +23,27 @@ export class Stats {
   pixiHooks: PIXIHooks;
   adapter: StatsJSAdapter;
 
-  fpsPanel: Panel;
-  msPanel: Panel;
-  memPanel?: Panel;
+  fpsStat: StatStorage;
+  msStat: StatStorage;
+  memStat?: StatStorage;
 
-  panels: Panel[] = [];
+  panels: PanelConfig[] = [];
   renderPanel: RenderPanel | null = null;
   wasInitDomElement: boolean = false;
 
   constructor(
     renderer: Renderer,
-    ticker?: { add: (fn: () => void) => void },
-    containerElement?: HTMLElement
+    containerElement: HTMLElement,
+    ticker?: { add: (fn: () => void) => void }
   ) {
     this.beginTime = (performance || Date).now();
     this.prevTime = this.beginTime;
 
-    this.fpsPanel = this.addPanel(new Panel('FPS', '#3ff', '#002'));
-    this.msPanel = this.addPanel(new Panel('MS', '#0f0', '#020'));
+    this.fpsStat = this.createStat('FPS', '#3ff', '#002');
+    this.msStat = this.createStat('MS', '#0f0', '#020');
 
     if ('memory' in performance) {
-      this.memPanel = this.addPanel(new Panel('MB', '#f08', '#200'));
+      this.memStat = this.createStat('MB', '#f08', '#200');
     }
 
     this.pixiHooks = new PIXIHooks(renderer);
@@ -69,12 +77,7 @@ export class Stats {
     if (this.containerElement && !this.wasInitDomElement) {
       this.domElement = document.createElement('div');
       this.domElement.id = DOM_ELEMENT_ID;
-      this.domElement.addEventListener(
-        'click',
-        this.handleClickPanel,
-        false
-      );
-
+      this.domElement.addEventListener('click', this.handleClickPanel, false);
       this.containerElement.appendChild(this.domElement);
       this.wasInitDomElement = true;
     }
@@ -83,15 +86,15 @@ export class Stats {
   handleClickPanel = (event: MouseEvent): void => {
     event.preventDefault();
     this.showPanel(++this.mode % this.panels.length);
-  }
+  };
 
-  addPanel(panel: Panel): Panel {
-    this.panels.push(panel);
-    return panel;
+  createStat(name: string, fg: string, bg: string): StatStorage {
+    const statStorage = new StatStorage();
+    this.panels.push({ name, fg, bg, statStorage });
+    return statStorage;
   }
 
   showPanel(id: number) {
-    
     const panel = this.panels[id];
 
     if (panel) {
@@ -99,16 +102,20 @@ export class Stats {
       this.removeDomRenderPanel();
       this.createRenderPanel(panel);
       this.mode = id;
-    } else  {
-      this.removeDomRenderPanel();
-      this.removeDomElement();
-      this.mode = -1;
+    } else {
+      this.hidePanel();
     }
   }
 
-  createRenderPanel(panel: Panel): void {
-    if (this.domElement && panel) {
-      this.renderPanel = new RenderPanel(panel);
+  hidePanel() {
+    this.removeDomRenderPanel();
+    this.removeDomElement();
+    this.mode = -1;
+  }
+
+  createRenderPanel({ name, fg, bg, statStorage }: PanelConfig): void {
+    if (this.domElement) {
+      this.renderPanel = new RenderPanel(name, fg, bg, statStorage);
       if (this.renderPanel.dom) {
         this.domElement.appendChild(this.renderPanel.dom);
       }
@@ -123,10 +130,14 @@ export class Stats {
     }
   }
 
-  removeDomElement():void {
+  removeDomElement(): void {
     if (this.containerElement && this.domElement) {
       this.containerElement.removeChild(this.domElement);
-      this.domElement.removeEventListener('click', this.handleClickPanel, false);
+      this.domElement.removeEventListener(
+        'click',
+        this.handleClickPanel,
+        false
+      );
       this.domElement = null;
       this.wasInitDomElement = false;
     }
@@ -141,21 +152,21 @@ export class Stats {
 
     const time: number = (performance || Date).now();
 
-    this.msPanel.update(time - this.beginTime, 200);
+    this.msStat.update(time - this.beginTime, 200);
 
     if (time > this.prevTime + 1000) {
-      this.fpsPanel.update((this.frames * 1000) / (time - this.prevTime), 100);
+      this.fpsStat.update((this.frames * 1000) / (time - this.prevTime), 100);
 
       this.prevTime = time;
       this.frames = 0;
 
-      if (this.memPanel && 'memory' in performance) {
+      if (this.memStat && 'memory' in performance) {
         const memory = performance.memory as {
           usedJSHeapSize: number;
           jsHeapSizeLimit: number;
         };
 
-        this.memPanel.update(
+        this.memStat.update(
           memory.usedJSHeapSize / 1048576,
           memory.jsHeapSizeLimit / 1048576
         );

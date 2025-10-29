@@ -10,70 +10,21 @@ import {
   TEXT_Y,
   WIDTH
 } from './stats-constants';
-
-type UpdateCallbackType = (value: number, maxValue: number) => void;
-export class Panel {
-  values: number[] = [];
-  snapshotSize: number = 30; // min~max of X frames total
-  name: string;
-  fg: string;
-  bg: string;
-
-  updateCallback: UpdateCallbackType | null = null;
-
-  constructor(name: string, fg: string, bg: string) {
-    this.name = name;
-    this.fg = fg;
-    this.bg = bg;
-  }
-
-  get min(): string {
-    return this.values
-      .reduce((min: number, value: number) => Math.min(min, value), Infinity)
-      .toFixed();
-  }
-
-  get max(): string {
-    return this.values
-      .reduce((max: number, value: number) => Math.max(max, value), 0)
-      .toFixed();
-  }
-
-  get averageValue(): string {
-    return (
-      this.values.reduce((sum: number, value: number) => sum + value, 0) /
-      this.values.length
-    ).toFixed(1);
-  }
-
-  addCallback = (cb: UpdateCallbackType | null) => {
-    this.updateCallback = cb;
-  };
-
-  pushValue(value: number) {
-    this.values.push(value);
-
-    if (this.values.length > this.snapshotSize) {
-      this.values = this.values.slice(-this.snapshotSize);
-    }
-  }
-
-  update(value: number, maxValue: number) {
-    this.pushValue(value);
-    if (typeof this.updateCallback === 'function') {
-      this.updateCallback(value, maxValue);
-    }
-  }
-}
-
+import { StatStorage } from './stat-storage';
 export class RenderPanel {
   dom: HTMLCanvasElement | null;
   context: CanvasRenderingContext2D | null;
-  panel: Panel | null;
+  fg: string;
+  bg: string;
+  name: string;
+  statStorage: StatStorage | null;
 
-  constructor(panel: Panel) {
-    this.panel = panel;
-    this.panel.addCallback(this.update.bind(this));
+  constructor(name: string, fg: string, bg: string, statStorage: StatStorage) {
+    this.fg = fg;
+    this.bg = bg;
+    this.name = name;
+    this.statStorage = statStorage;
+    this.statStorage.addCallback(this.update);
     const canvas: HTMLCanvasElement = document.createElement('canvas');
 
     canvas.width = WIDTH;
@@ -87,14 +38,14 @@ export class RenderPanel {
     context.font = `bold ${FONT_SIZE}px ${getComputedStyle(document.body).fontFamily}`;
     context.textBaseline = 'top';
 
-    context.fillStyle = panel.bg;
+    context.fillStyle = this.bg;
     context.fillRect(0, 0, WIDTH, HEIGHT);
 
-    context.fillStyle = panel.fg;
-    context.fillText(panel.name, TEXT_X, TEXT_Y);
+    context.fillStyle = this.fg;
+    context.fillText(this.name, TEXT_X, TEXT_Y);
     context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
 
-    context.fillStyle = panel.bg;
+    context.fillStyle = this.bg;
     context.globalAlpha = 0.8;
     context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
 
@@ -102,19 +53,19 @@ export class RenderPanel {
     this.context = context;
   }
 
-  update(value: number, maxValue: number) {
-    if (!this.context || !this.panel || !this.dom) {
+  update = (value: number, maxValue: number) => {
+    if (!this.context || !this.statStorage || !this.dom) {
       return;
     }
     const context: CanvasRenderingContext2D = this.context;
 
-    context.fillStyle = this.panel.bg;
+    context.fillStyle = this.bg;
     context.globalAlpha = 1;
     context.fillRect(0, 0, WIDTH, GRAPH_Y);
-    context.fillStyle = this.panel.fg;
+    context.fillStyle = this.fg;
     context.font = `bold ${FONT_SIZE}px ${getComputedStyle(document.body).fontFamily}`;
     context.fillText(
-      `${this.panel.averageValue} ${this.panel.name} (${this.panel.min}-${this.panel.max})`,
+      `${this.statStorage.averageValue} ${this.name} (${this.statStorage.min}-${this.statStorage.max})`,
       TEXT_X,
       TEXT_Y
     );
@@ -133,7 +84,7 @@ export class RenderPanel {
 
     context.fillRect(GRAPH_X + GRAPH_WIDTH - PR, GRAPH_Y, PR, GRAPH_HEIGHT);
 
-    context.fillStyle = this.panel.bg;
+    context.fillStyle = this.bg;
     context.globalAlpha = 0.8;
     context.fillRect(
       GRAPH_X + GRAPH_WIDTH - PR,
@@ -144,11 +95,11 @@ export class RenderPanel {
   }
 
   destroy() {
-    if (!this.panel) {
+    if (!this.statStorage) {
       return;
     }
-    this.panel.addCallback(null);
-    this.panel = null;
+    this.statStorage.removeCallback(this.update);
+    this.statStorage = null;
     this.context = null;
     if (this.dom) {
       this.dom.remove();

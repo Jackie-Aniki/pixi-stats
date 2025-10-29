@@ -1,7 +1,14 @@
 import { PIXIHooks } from './pixi-hooks';
-import { Panel, RenderPanel } from './stats-panel';
+import { RenderPanel } from './stats-panel';
+import { StatStorage } from './stat-storage';
 import { Renderer } from './model';
 import { StatsJSAdapter } from './stats-adapter';
+export type PanelConfig = {
+    name: string;
+    fg: string;
+    bg: string;
+    statStorage: StatStorage;
+};
 export declare class Stats {
     mode: number;
     frames: number;
@@ -11,20 +18,21 @@ export declare class Stats {
     containerElement: HTMLElement | null;
     pixiHooks: PIXIHooks;
     adapter: StatsJSAdapter;
-    fpsPanel: Panel;
-    msPanel: Panel;
-    memPanel?: Panel;
-    panels: Panel[];
+    fpsStat: StatStorage;
+    msStat: StatStorage;
+    memStat?: StatStorage;
+    panels: PanelConfig[];
     renderPanel: RenderPanel | null;
     wasInitDomElement: boolean;
-    constructor(renderer: Renderer, ticker?: {
+    constructor(renderer: Renderer, containerElement: HTMLElement, ticker?: {
         add: (fn: () => void) => void;
-    }, containerElement?: HTMLElement);
+    });
     initDomElement(): void;
     handleClickPanel: (event: MouseEvent) => void;
-    addPanel(panel: Panel): Panel;
+    createStat(name: string, fg: string, bg: string): StatStorage;
     showPanel(id: number): void;
-    createRenderPanel(panel: Panel): void;
+    hidePanel(): void;
+    createRenderPanel({ name, fg, bg, statStorage }: PanelConfig): void;
     removeDomRenderPanel(): void;
     removeDomElement(): void;
     begin(): void;
