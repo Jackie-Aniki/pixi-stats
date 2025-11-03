@@ -25,7 +25,7 @@ This library provides an info box that will help you monitor your code performan
 
 #### Live demo
 
-https://prozi.github.io/oneforall/demo/?fps
+https://jackie-aniki.github.io/oneforall/demo/?fps
 
 #### Usage
 
