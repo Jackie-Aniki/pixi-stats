@@ -44,8 +44,8 @@ export class Stats {
 
   constructor(
     renderer: Renderer,
-    containerElement = Stats.getContainerElement(),
-    ticker?: { add: (fn: () => void) => void }
+    ticker?: { add: (fn: () => void) => void },
+    containerElement = Stats.getContainerElement()
   ) {
     this.beginTime = (performance || Date).now();
     this.prevTime = this.beginTime;

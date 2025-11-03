@@ -16,7 +16,7 @@ class Stats {
         }
         return document === null || document === void 0 ? void 0 : document.body;
     }
-    constructor(renderer, containerElement = Stats.getContainerElement(), ticker) {
+    constructor(renderer, ticker, containerElement = Stats.getContainerElement()) {
         this.mode = -1;
         this.frames = 0;
         this.domElement = null;

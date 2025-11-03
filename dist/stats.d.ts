@@ -28,9 +28,9 @@ export declare class Stats {
      * in document/html/dom context returns document's body
      */
     static getContainerElement(): HTMLElement | undefined;
-    constructor(renderer: Renderer, containerElement?: HTMLElement | undefined, ticker?: {
+    constructor(renderer: Renderer, ticker?: {
         add: (fn: () => void) => void;
-    });
+    }, containerElement?: HTMLElement | undefined);
     initDomElement(): void;
     handleClickPanel: (event: MouseEvent) => void;
     createStat(name: string, fg: string, bg: string): StatStorage;

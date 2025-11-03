@@ -43,7 +43,7 @@ const stats = new Stats(renderer);
 const element = document.querySelector('#your_container');
 const ticker = PIXI.ticker;
 
-new Stats(renderer, element, ticker);
+new Stats(renderer, ticker, element);
 ```
 
 ### three.js
@@ -91,12 +91,8 @@ The credit goes to:
 
 - https://github.com/mrdoob/stats.js/ - FPS, MS, MB counters
 - https://github.com/eXponenta/gstatsjs/ - DC, TC counters
-- https://github.com/Prozi/ - maintainer, fixes, updates
+- https://github.com/Jackie-Aniki/ - maintainer, fixes, updates
 
 ### License
 
 MIT
-
-### You can buy me a coffee
-
-https://paypal.me/jacekpietal
