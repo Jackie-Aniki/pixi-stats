@@ -19,11 +19,10 @@ class Stats {
     constructor(renderer, ticker, containerElement = Stats.getContainerElement()) {
         this.mode = -1;
         this.frames = 0;
+        this.panels = [];
         this.domElement = null;
         this.containerElement = null;
-        this.panels = [];
         this.renderPanel = null;
-        this.wasInitDomElement = false;
         this.handleClickPanel = (event) => {
             event.preventDefault();
             this.showPanel(++this.mode % this.panels.length);
@@ -37,10 +36,6 @@ class Stats {
         }
         this.pixiHooks = new pixi_hooks_1.PIXIHooks(renderer);
         this.adapter = new stats_adapter_1.StatsJSAdapter(this.pixiHooks, this);
-        if (containerElement) {
-            this.containerElement = containerElement;
-            this.initDomElement();
-        }
         if (typeof (renderer === null || renderer === void 0 ? void 0 : renderer.animations) !== 'undefined') {
             renderer.animations.push(() => {
                 this.adapter.update();
@@ -58,14 +53,18 @@ class Stats {
             };
             frame();
         }
+        if (containerElement) {
+            this.containerElement = containerElement;
+            this.initDomElement();
+            this.showPanel();
+        }
     }
     initDomElement() {
-        if (this.containerElement && !this.wasInitDomElement) {
+        if (this.containerElement && !this.domElement) {
             this.domElement = document.createElement('div');
             this.domElement.id = stats_constants_1.DOM_ELEMENT_ID;
             this.domElement.addEventListener('click', this.handleClickPanel, false);
             this.containerElement.appendChild(this.domElement);
-            this.wasInitDomElement = true;
         }
     }
     createStat(name, fg, bg) {
@@ -73,7 +72,7 @@ class Stats {
         this.panels.push({ name, fg, bg, statStorage });
         return statStorage;
     }
-    showPanel(id) {
+    showPanel(id = 0) {
         const panel = this.panels[id];
         if (panel) {
             this.removeDomRenderPanel();
@@ -90,27 +89,32 @@ class Stats {
         this.mode = -1;
     }
     createRenderPanel({ name, fg, bg, statStorage }) {
-        if (this.domElement) {
-            this.renderPanel = new stats_panel_1.RenderPanel(name, fg, bg, statStorage);
-            if (this.renderPanel.dom) {
-                this.domElement.appendChild(this.renderPanel.dom);
-            }
+        if (!this.domElement) {
+            return;
+        }
+        this.renderPanel = new stats_panel_1.RenderPanel(name, fg, bg, statStorage);
+        if (this.renderPanel.dom) {
+            this.domElement.appendChild(this.renderPanel.dom);
         }
     }
     removeDomRenderPanel() {
-        if (this.domElement && this.renderPanel && this.renderPanel.dom) {
+        var _a;
+        if (!this.domElement) {
+            return;
+        }
+        if ((_a = this.renderPanel) === null || _a === void 0 ? void 0 : _a.dom) {
             this.domElement.removeChild(this.renderPanel.dom);
             this.renderPanel.destroy();
             this.renderPanel = null;
         }
     }
     removeDomElement() {
-        if (this.containerElement && this.domElement) {
-            this.containerElement.removeChild(this.domElement);
-            this.domElement.removeEventListener('click', this.handleClickPanel, false);
-            this.domElement = null;
-            this.wasInitDomElement = false;
+        if (!this.domElement || !this.containerElement) {
+            return;
         }
+        this.containerElement.removeChild(this.domElement);
+        this.domElement.removeEventListener('click', this.handleClickPanel, false);
+        this.domElement = null;
     }
     begin() {
         this.beginTime = (performance || Date).now();

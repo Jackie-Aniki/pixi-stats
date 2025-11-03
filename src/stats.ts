@@ -18,8 +18,7 @@ export class Stats {
 
   beginTime: number;
   prevTime: number;
-  domElement: HTMLDivElement | null = null;
-  containerElement: HTMLElement | null = null;
+
   pixiHooks: PIXIHooks;
   adapter: StatsJSAdapter;
 
@@ -28,8 +27,9 @@ export class Stats {
   memStat?: StatStorage;
 
   panels: PanelConfig[] = [];
+  domElement: HTMLDivElement | null = null;
+  containerElement: HTMLElement | null = null;
   renderPanel: RenderPanel | null = null;
-  wasInitDomElement: boolean = false;
 
   /**
    * in document/html/dom context returns document's body
@@ -60,11 +60,6 @@ export class Stats {
     this.pixiHooks = new PIXIHooks(renderer);
     this.adapter = new StatsJSAdapter(this.pixiHooks, this);
 
-    if (containerElement) {
-      this.containerElement = containerElement;
-      this.initDomElement();
-    }
-
     if (typeof renderer?.animations !== 'undefined') {
       renderer.animations.push(() => {
         this.adapter.update();
@@ -81,15 +76,20 @@ export class Stats {
 
       frame();
     }
+
+    if (containerElement) {
+      this.containerElement = containerElement;
+      this.initDomElement();
+      this.showPanel();
+    }
   }
 
   initDomElement(): void {
-    if (this.containerElement && !this.wasInitDomElement) {
+    if (this.containerElement && !this.domElement) {
       this.domElement = document.createElement('div');
       this.domElement.id = DOM_ELEMENT_ID;
       this.domElement.addEventListener('click', this.handleClickPanel, false);
       this.containerElement.appendChild(this.domElement);
-      this.wasInitDomElement = true;
     }
   }
 
@@ -104,7 +104,7 @@ export class Stats {
     return statStorage;
   }
 
-  showPanel(id: number) {
+  showPanel(id = 0) {
     const panel = this.panels[id];
 
     if (panel) {
@@ -123,33 +123,39 @@ export class Stats {
   }
 
   createRenderPanel({ name, fg, bg, statStorage }: PanelConfig): void {
-    if (this.domElement) {
-      this.renderPanel = new RenderPanel(name, fg, bg, statStorage);
-      if (this.renderPanel.dom) {
-        this.domElement.appendChild(this.renderPanel.dom);
-      }
+    if (!this.domElement) {
+      return;
+    }
+
+    this.renderPanel = new RenderPanel(name, fg, bg, statStorage);
+
+    if (this.renderPanel.dom) {
+      this.domElement.appendChild(this.renderPanel.dom);
     }
   }
 
   removeDomRenderPanel(): void {
-    if (this.domElement && this.renderPanel && this.renderPanel.dom) {
+    if (!this.domElement) {
+      return;
+    }
+
+    if (this.renderPanel?.dom) {
       this.domElement.removeChild(this.renderPanel.dom);
+
       this.renderPanel.destroy();
       this.renderPanel = null;
     }
   }
 
   removeDomElement(): void {
-    if (this.containerElement && this.domElement) {
-      this.containerElement.removeChild(this.domElement);
-      this.domElement.removeEventListener(
-        'click',
-        this.handleClickPanel,
-        false
-      );
-      this.domElement = null;
-      this.wasInitDomElement = false;
+    if (!this.domElement || !this.containerElement) {
+      return;
     }
+
+    this.containerElement.removeChild(this.domElement);
+
+    this.domElement.removeEventListener('click', this.handleClickPanel, false);
+    this.domElement = null;
   }
 
   begin(): void {

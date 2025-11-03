@@ -14,16 +14,15 @@ export declare class Stats {
     frames: number;
     beginTime: number;
     prevTime: number;
-    domElement: HTMLDivElement | null;
-    containerElement: HTMLElement | null;
     pixiHooks: PIXIHooks;
     adapter: StatsJSAdapter;
     fpsStat: StatStorage;
     msStat: StatStorage;
     memStat?: StatStorage;
     panels: PanelConfig[];
+    domElement: HTMLDivElement | null;
+    containerElement: HTMLElement | null;
     renderPanel: RenderPanel | null;
-    wasInitDomElement: boolean;
     /**
      * in document/html/dom context returns document's body
      */
@@ -34,7 +33,7 @@ export declare class Stats {
     initDomElement(): void;
     handleClickPanel: (event: MouseEvent) => void;
     createStat(name: string, fg: string, bg: string): StatStorage;
-    showPanel(id: number): void;
+    showPanel(id?: number): void;
     hidePanel(): void;
     createRenderPanel({ name, fg, bg, statStorage }: PanelConfig): void;
     removeDomRenderPanel(): void;
