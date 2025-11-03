@@ -1,5 +1,4 @@
-import { UpdateCallbackType } from "./model";
-
+import { UpdateCallbackType } from './model';
 
 export class StatStorage {
   values: number[] = [];

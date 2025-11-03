@@ -1,4 +1,4 @@
-import { UpdateCallbackType } from "./model";
+import { UpdateCallbackType } from './model';
 export declare class StatStorage {
     values: number[];
     snapshotSize: number;

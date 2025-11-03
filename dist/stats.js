@@ -7,7 +7,16 @@ const stat_storage_1 = require("./stat-storage");
 const stats_adapter_1 = require("./stats-adapter");
 const stats_constants_1 = require("./stats-constants");
 class Stats {
-    constructor(renderer, containerElement, ticker) {
+    /**
+     * in document/html/dom context returns document's body
+     */
+    static getContainerElement() {
+        if (typeof document === 'undefined') {
+            return undefined;
+        }
+        return document === null || document === void 0 ? void 0 : document.body;
+    }
+    constructor(renderer, containerElement = Stats.getContainerElement(), ticker) {
         this.mode = -1;
         this.frames = 0;
         this.domElement = null;
@@ -31,24 +40,22 @@ class Stats {
         if (containerElement) {
             this.containerElement = containerElement;
         }
-        if ('animations' in renderer) {
+        if (typeof (renderer === null || renderer === void 0 ? void 0 : renderer.animations) !== 'undefined') {
             renderer.animations.push(() => {
                 this.adapter.update();
             });
         }
-        else {
-            if (ticker) {
-                ticker.add(() => {
-                    this.adapter.update();
-                });
-            }
-            else {
-                const frame = () => {
-                    this.adapter.update();
-                    requestAnimationFrame(frame);
-                };
-                frame();
-            }
+        else if (typeof ticker !== 'undefined') {
+            ticker.add(() => {
+                this.adapter.update();
+            });
+        }
+        else if (typeof requestAnimationFrame !== 'undefined') {
+            const frame = () => {
+                this.adapter.update();
+                requestAnimationFrame(frame);
+            };
+            frame();
         }
     }
     initDomElement() {

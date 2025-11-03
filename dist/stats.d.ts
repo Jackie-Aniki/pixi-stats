@@ -24,7 +24,11 @@ export declare class Stats {
     panels: PanelConfig[];
     renderPanel: RenderPanel | null;
     wasInitDomElement: boolean;
-    constructor(renderer: Renderer, containerElement: HTMLElement, ticker?: {
+    /**
+     * in document/html/dom context returns document's body
+     */
+    static getContainerElement(): HTMLElement | undefined;
+    constructor(renderer: Renderer, containerElement?: HTMLElement | undefined, ticker?: {
         add: (fn: () => void) => void;
     });
     initDomElement(): void;

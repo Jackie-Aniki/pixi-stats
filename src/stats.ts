@@ -31,9 +31,20 @@ export class Stats {
   renderPanel: RenderPanel | null = null;
   wasInitDomElement: boolean = false;
 
+  /**
+   * in document/html/dom context returns document's body
+   */
+  static getContainerElement(): HTMLElement | undefined {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
+    return document?.body;
+  }
+
   constructor(
     renderer: Renderer,
-    containerElement: HTMLElement,
+    containerElement = Stats.getContainerElement(),
     ticker?: { add: (fn: () => void) => void }
   ) {
     this.beginTime = (performance || Date).now();
@@ -53,23 +64,21 @@ export class Stats {
       this.containerElement = containerElement;
     }
 
-    if ('animations' in renderer) {
+    if (typeof renderer?.animations !== 'undefined') {
       renderer.animations.push(() => {
         this.adapter.update();
       });
-    } else {
-      if (ticker) {
-        ticker.add(() => {
-          this.adapter.update();
-        });
-      } else {
-        const frame = () => {
-          this.adapter.update();
-          requestAnimationFrame(frame);
-        };
+    } else if (typeof ticker !== 'undefined') {
+      ticker.add(() => {
+        this.adapter.update();
+      });
+    } else if (typeof requestAnimationFrame !== 'undefined') {
+      const frame = () => {
+        this.adapter.update();
+        requestAnimationFrame(frame);
+      };
 
-        frame();
-      }
+      frame();
     }
   }
 

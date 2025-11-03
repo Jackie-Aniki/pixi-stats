@@ -92,7 +92,7 @@ export class RenderPanel {
       2 * PR,
       Math.round((1 - value / maxValue) * GRAPH_HEIGHT)
     );
-  }
+  };
 
   destroy() {
     if (!this.statStorage) {
