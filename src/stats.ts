@@ -62,6 +62,7 @@ export class Stats {
 
     if (containerElement) {
       this.containerElement = containerElement;
+      this.initDomElement();
     }
 
     if (typeof renderer?.animations !== 'undefined') {
@@ -107,7 +108,6 @@ export class Stats {
     const panel = this.panels[id];
 
     if (panel) {
-      this.initDomElement();
       this.removeDomRenderPanel();
       this.createRenderPanel(panel);
       this.mode = id;

@@ -39,6 +39,7 @@ class Stats {
         this.adapter = new stats_adapter_1.StatsJSAdapter(this.pixiHooks, this);
         if (containerElement) {
             this.containerElement = containerElement;
+            this.initDomElement();
         }
         if (typeof (renderer === null || renderer === void 0 ? void 0 : renderer.animations) !== 'undefined') {
             renderer.animations.push(() => {
@@ -75,7 +76,6 @@ class Stats {
     showPanel(id) {
         const panel = this.panels[id];
         if (panel) {
-            this.initDomElement();
             this.removeDomRenderPanel();
             this.createRenderPanel(panel);
             this.mode = id;
